@@ -203,6 +203,7 @@ class ApproximateQAgent(PacmanQAgent):
         PacmanQAgent.__init__(self, **args)
         self.weights = util.Counter()
 
+
     def getWeights(self):
         return self.weights
 
@@ -211,33 +212,19 @@ class ApproximateQAgent(PacmanQAgent):
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
         """
-        "*** YOUR CODE HERE ***"
         features = self.featExtractor.getFeatures(state, action)
-        total = 0.0
-        for feature in features:
-          value = features[feature]
-          weight = 0.0
-          if feature in self.weights:
-            weight = self.weights[feature]
-          total += weight * value
-
-        return total
+        return sum(self.getWeights()[feature] * features[feature] for feature in features)
 
     def update(self, state, action, nextState, reward):
         """
            Should update your weights based on transition
         """
-        "*** YOUR CODE HERE ***"
-        currentVal = self.computeValueFromQValues(state)
-        nextVal = self.computeValueFromQValues(nextState)
-
-        difference = (reward + self.discount * nextVal) - currentVal
-
         features = self.featExtractor.getFeatures(state, action)
+        difference = (reward + self.discount * self.getValue(nextState)) - self.getQValue(state, action)
+        for feature in features.keys():
+            self.weights[feature] = self.getWeights()[feature] + self.alpha * difference * features[feature]
 
-        for feature in features:
-          value = features[feature]
-          self.weights[feature] = self.weights[feature] + self.alpha * difference * value
+
 
 
     def final(self, state):
